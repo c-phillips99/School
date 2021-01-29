@@ -1,3 +1,5 @@
+# This file impliments gradient descent on a simple function to find a local minimum
+
 from random import randint
 
 def f(x):
