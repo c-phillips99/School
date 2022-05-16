@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Rocket</title>
+    <style>
+body {
+    text-align: center;
+    background: grey;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    touch-action: manipulation;
+}
+
+.wrap {
+    display: inline-block;
+    overflow: hidden;
+    text-align: center;
+    background: black;
+    padding: 30px;
+}
+canvas {        
+    background: white;
+}
+
+button {
+    width: 2em;
+    height: 2em;
+    font-size: 5em;
+    -webkit-user-select: none;
+}
+
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <canvas id="board" width="800" height="800">
+        </canvas>
+    </div>
+    <div>
+        <button id="btnL">&leftarrow;</button>
+        <button id="btnU">&uparrow;</button>
+        <button id="btnR">&rightarrow;</button>
+    </div>
+<script>
+var cw = 800;
+var ch = 800;
+var g = 9.8;
+
+var ctx = null;
+
+var rw = 10;
+var rh = 20;
+
+var r = [300, 780];
+var rt = Math.PI/2;
+var v = [0,0];
+var speed = 0;
+
+var thrustColors = ["#f00", "#ff0", "#f99", "fa9", "#aa9"];
+
+var target = { id: 0, p: [cw/2,ch/2], r: cw/20 }
+
+drawRocket = function(r, t, thrust, style) {
+    ctx.save();
+    // orient
+    ctx.translate(r[0],r[1]); // center of mass
+    ctx.rotate(t+Math.PI/2);  // angle
+    ctx.translate(0,-rh/2);   // bottom of rocket at (0,0)
+
+    // flame
+    if (thrust > 0) {
+        for (var i = 0; i < 30; i++) {
+            ctx.beginPath();
+            var a = (Math.random() - 0.5) * Math.PI/6 - Math.PI/2;
+            var l = Math.random() * rh/2 + rh/4;
+            var c = Math.floor(Math.random() * thrustColors.length);
+            ctx.moveTo(0,rw/4);
+            ctx.lineTo(Math.cos(a)*l, Math.sin(a)*l);
+            ctx.strokeStyle = thrustColors[c];
+            ctx.stroke();
+        }
+    }
+
+    // Body
+    ctx.strokeStyle = "#000";
+    ctx.beginPath();
+    ctx.moveTo(0,rw/4);
+    ctx.lineTo(-rw/2,0);
+    ctx.bezierCurveTo( -rw/2,rh/3, -rw/2,rh,   0,rh);
+    ctx.bezierCurveTo(  rw/2,rh,    rw/2,rh/3, rw/2,0);
+    ctx.lineTo(0,rw/4);
+    ctx.fillStyle = style;
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+}
+
+drawTarget = function(p, v, w, green) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(p[0],p[1],w/2,0,2*Math.PI);
+    ctx.strokeStyle = green ? "green" : "red";
+    ctx.stroke();
+    ctx.font = Math.round(w) + "px sans-serif";
+    ctx.fillStyle = ctx.strokeStyle;
+    var text = ctx.measureText(""+v); // TextMetrics object
+    ctx.fillText(""+v, p[0] - text.width/2, p[1]+w*9/24);
+    ctx.restore();
+}
+
+norm = function(v) {
+    return Math.sqrt(v[0]*v[0]+v[1]*v[1]);
+}
+
+dist = function(a,b) {
+    return norm([a[0]-b[0],a[1]-b[1]]);
+}
+
+var lt = 0;
+var thrustOn = 0;
+var spin = 0;
+
+var others = [];
+
+var ws = new WebSocket("ws://" + document.domain + ":" + location.port + "/step");
+ws.onmessage = function(e) {
+    var ss = JSON.parse(e.data);
+    if (ss.global)
+        target = ss.global;
+    others = ss.local;
+}
+
+draw = function(t) {
+    dt = Math.min(0.5, Math.abs((t - lt)/100));
+    if (lt) {
+        if (thrustOn > 0) {
+            v[0] -= Math.cos(rt)*0.1;
+            v[1] -= Math.sin(rt)*0.1;
+        }
+
+        if (norm(v) > cw/10) {
+            var theta = Math.atan2(v[1],v[0]);
+            v[0] = cw/10 * Math.cos(theta);
+            v[1] = cw/10 * Math.sin(theta);
+        }
+
+        v[0] = v[0] * 0.9998;
+        v[1] = v[1] * 0.9998;
+        speed = norm(v);
+
+        if (spin != 0)
+            rt = rt + spin*0.05;
+
+        r[0] += v[0]*dt;
+        r[1] += v[1]*dt;
+
+        if (r[0] > cw) {
+            r[0] = 2*cw - r[0];
+            v[0] = -v[0];
+        }
+        if (r[0] < 0) {
+            r[0] = -r[0];
+            v[0] = -v[0];
+        }
+
+        if (r[1] > ch) {
+            r[1] = 2*ch - r[1];
+            v[1] = -v[1];
+        }
+        if (r[1] < 0) {
+            r[1] = -r[1];
+            v[1] = -v[1];
+        }
+
+        var newt = false;
+        var targetd = dist(r,target.p);
+        if (targetd < target.r && speed < cw/130) {
+            target.p[0] = Math.floor(Math.random() * cw*0.8 + cw*0.1);
+            target.p[1] = Math.floor(Math.random() * ch*0.8 + ch*0.1);
+            target.r = Math.floor(Math.random() * cw/30 + cw/30);
+            target.id = target.id + 1;
+            console.log("New target: " + target.id);
+            newt = true;
+        }
+
+        if (ws.readyState == ws.OPEN) {
+            if (newt) {
+                step = { global: target, local: [{ v, r, rt, thrustOn }]};
+                ws.send(JSON.stringify(step));
+            } else {
+                step = { local: [{ v, r, rt, thrustOn }]};
+                ws.send(JSON.stringify(step));
+            }
+        }
+    }
+    lt = t;
+    ctx.clearRect(0,0,cw,ch);
+    drawTarget(target.p, target.id, target.r, speed < cw/130);
+    for (o of others) {
+        drawRocket(o.r, o.rt, o.thrustOn, "blue");
+    }
+    drawRocket(r, rt, thrustOn, "grey");
+    window.requestAnimationFrame(draw);
+};
+
+window.onkeydown = function(e) {
+    switch (e.key) {
+        case "ArrowDown":
+            break;
+        case "ArrowUp":
+            thrustOn = 1;
+            break;
+        case "ArrowLeft":
+            spin = -1;
+            break;
+        case "ArrowRight":
+            spin = 1;
+            break;
+    };
+};
+
+window.onkeyup = function(e) {
+    switch (e.key) {
+        case "ArrowUp":
+            thrustOn = 0
+            break;
+        case "ArrowLeft":
+            spin = 0;
+            break;
+        case "ArrowRight":
+            spin = 0;
+            break;
+    };
+};
+
+lDown = function(e) { spin = -1; }
+lUp = function(e) { spin = 0; }
+rDown = function(e) { spin = 1; }
+rUp = function(e) { spin = 0; }
+uDown = function(e) { thrustOn = 1; }
+uUp = function(e) { thrustOn = 0; }
+
+window.onload = function() {
+    var l = document.getElementById("btnL");
+    var u = document.getElementById("btnU");
+    var r = document.getElementById("btnR");
+
+    l.addEventListener("mousedown", lDown);
+    l.addEventListener("mouseup", lUp);
+    u.addEventListener("mousedown", uDown);
+    u.addEventListener("mouseup", uUp);
+    r.addEventListener("mousedown", rDown);
+    r.addEventListener("mouseup", rUp);
+
+    l.addEventListener("touchstart", lDown);
+    l.addEventListener("touchend", lUp);
+    u.addEventListener("touchstart", uDown);
+    u.addEventListener("touchend", uUp);
+    r.addEventListener("touchstart", rDown);
+    r.addEventListener("touchend", rUp);
+
+    var c = document.getElementById("board");
+    ctx = c.getContext("2d");
+
+    window.requestAnimationFrame(draw);
+};
+
+</script>
+</body>
+</html>
