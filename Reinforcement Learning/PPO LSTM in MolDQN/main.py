@@ -9,7 +9,7 @@ from torch.distributions import Categorical
 from torch.utils.tensorboard import SummaryWriter
 
 TENSORBOARD_LOG = True
-TB_LOG_PATH = "./runs/dqn/run2"
+TB_LOG_PATH = "./runs/ppo_lstm/run2"
 episodes = 0
 iterations = 200000
 update_interval = 20
