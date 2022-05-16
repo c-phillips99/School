@@ -1,0 +1,6 @@
+{"Name": "Mike", "Major": "Computer Science", "GPA": 3.4, "Gender": "Male", "Age": 21}
+{"Name": "John", "Major": "Math", "GPA": 3.1, "Gender": "Male", "Age": 20}
+{"Name": "Holly", "Major": "Computer Science", "GPA": "3.4", "Gender": "Female", "Age": 21}
+{"Name": "Judy", "Major": "Biology", "GPA": 3.2, "Gender": "Female", "Age": 24}
+{"Name": "Angela", "Major": "Biology", "GPA": 3.1, "Gender": "Female", "Age": 30}
+{"Name": "Tess", "Major": "Data Science", "GPA": 3.5, "Gender": "Female", "Age": 28}

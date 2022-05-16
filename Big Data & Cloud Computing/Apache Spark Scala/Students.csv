@@ -1,0 +1,29 @@
+,,,Student Records,
+Name,Major,GPA,Gender,Age
+Mike,Computer Science,3.4,Male,21
+John,Math,3.1,Male,20
+Holly,Computer Science,3.4,Female,21
+Judy,Biology,3.2,Female,24
+Angela,Biology,3.1,Female,30
+Tess,Data Science,3.5,Female,28
+,,,,
+,,,,
+,,,Exam1,
+Name,Score,,,
+Jon,78,,,
+John,89,,,
+Ethan,98,,,
+Jacob,85,,,
+,,,Exam2,
+Name,Score,,,
+John,88,,,
+Joel,91,,,
+Mike,98,,,
+Jon,85,,,
+,,,Exam3,
+,,,,
+Name,Score,,,
+Jacob,87,,,
+Mike,84,,,
+Ethan,90,,,
+Joel,95,,,
