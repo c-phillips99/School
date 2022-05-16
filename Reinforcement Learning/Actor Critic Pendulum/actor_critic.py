@@ -3,11 +3,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-# from torch.distributions import Categorical
 from torch.distributions import Normal
 
-#Hyperparameters
-# learning_rate = 0.0002
+# Hyperparameters
 learning_rate  = 0.0002
 gamma         = 0.98
 lmbda         = 0.95
@@ -19,20 +17,11 @@ class ActorCritic(nn.Module):
         super(ActorCritic, self).__init__()
         self.data = []
         
-        # self.fc1 = nn.Linear(4,256)
         self.fc1   = nn.Linear(3,128)
-        # self.fc_pi = nn.Linear(256,2)
         self.fc_mu = nn.Linear(128,1)
         self.fc_std  = nn.Linear(128,1)
-        # self.fc_v = nn.Linear(256,1)
         self.fc_v = nn.Linear(128,1)
         self.optimizer = optim.Adam(self.parameters(), lr=learning_rate)
-        
-    # def pi(self, x, softmax_dim = 0):
-    #     x = F.relu(self.fc1(x))
-    #     x = self.fc_pi(x)
-    #     prob = F.softmax(x, dim=softmax_dim)
-    #     return prob
 
     def pi(self, x, softmax_dim = 0):
         x = F.relu(self.fc1(x))
@@ -65,34 +54,11 @@ class ActorCritic(nn.Module):
                                                                torch.tensor(prob_a_lst, dtype=torch.float), torch.tensor(done_lst, dtype=torch.float)
         self.data = []
         return s_batch, a_batch, r_batch, s_prime_batch, prob_a_batch, done_batch
-  
-    # def train_net(self):
-    #     s, a, r, s_prime, prob_a, done = self.make_batch()
-    #     td_target = r + gamma * self.v(s_prime) * done
-    #     delta = td_target - self.v(s)
-        
-    #     pi = self.pi(s, softmax_dim=1)
-    #     pi_a = pi.gather(1,a)
-    #     loss = -torch.log(pi_a) * delta.detach() + F.smooth_l1_loss(self.v(s), td_target.detach())
-
-    #     self.optimizer.zero_grad()
-    #     loss.mean().backward()
-    #     self.optimizer.step()      
-    # 
 
     def train_net(self):
         s, a, r, s_prime, old_log_prob, done = self.make_batch()
         td_target = r + gamma * self.v(s_prime) * done
         delta = td_target - self.v(s)
-        # delta = delta.detach().numpy()
-
-        # advantage_lst = []
-        # advantage = 0.0
-        # for delta_t in delta[::-1]:
-        #     advantage = gamma * lmbda * advantage + delta_t[0]
-        #     advantage_lst.append([advantage])
-        # advantage_lst.reverse()
-        # advantage = torch.tensor(advantage_lst, dtype=torch.float)
 
         mu, std = self.pi(s, softmax_dim=1)
         dist = Normal(mu, std)
@@ -102,7 +68,6 @@ class ActorCritic(nn.Module):
         surr1 = ratio * delta.detach()
         surr2 = torch.clamp(ratio, 1-eps_clip, 1+eps_clip) * delta.detach()
         loss = -torch.min(surr1, surr2) + F.smooth_l1_loss(self.v(s) , td_target)
-        # loss = -log_prob * delta.detach() + F.smooth_l1_loss(self.v(s), td_target.detach())
 
         self.optimizer.zero_grad()
         loss.mean().backward()
@@ -120,14 +85,11 @@ def main():
         s = env.reset()
         while not done:
             for t in range(n_rollout):
-                # prob = model.pi(torch.from_numpy(s).float())
-                # m = Categorical(prob)
                 mu, std = model.pi(torch.from_numpy(s).float())
                 m = Normal(mu, std)
                 a = m.sample()
                 log_prob = m.log_prob(a)
                 s_prime, r, done, info = env.step([a.item()])
-                # model.put_data((s,a,r,s_prime,done))
                 model.put_data((s, a, r/10.0, s_prime, log_prob.item(), done))
                 
                 s = s_prime
