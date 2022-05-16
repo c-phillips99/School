@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<body>
+<style>
+h1 {font-size: 300%;}
+h2 {font-size: 200%;}
+form{font-size: 200%;}
+table {font-size: 150%;}
+label{font-size: 100%;}
+option{font-size: 80%}
+input,select {font-size: 50%;}
+.button {
+  background-color: #4CAF50;
+  border: none;
+  color: white;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+}
+/* The alert message box */
+.alert {
+  padding: 20px;
+  background-color: #f44336; /* Red */
+  color: white;
+  margin-bottom: 15px;
+}
+
+/* The close button */
+.closebtn {
+  margin-left: 15px;
+  color: white;
+  font-weight: bold;
+  float: right;
+  font-size: 22px;
+  line-height: 20px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+/* When moving the mouse over the close button */
+.closebtn:hover {
+  color: black;
+}
+textarea{width: 100%; font-size: 100%;}
+table.fixed { width:100%; border: 1px solid black; 
+            border-collapse: collapse; 
+            padding-left: 10px; padding-right: 10px; table-layout:fixed; }
+table.fixed td {height: 40px; overflow: auto; border: 1px solid black; 
+                padding-left: 5px; padding-right: 5px;}
+table.fixed td:nth-of-type(1) { text-align: center; }
+table.fixed td:nth-of-type(3) { text-align: center; }
+table.fixed td:nth-of-type(4) { text-align: center; }
+th {background-color: black;color: white}
+</style>
+
+<h1>Issue Tracker</h1>
+<div class="container">
+    <div style="width: 60%; float: right;">
+        <h2><u>View/Edit Issues Here</u></h2>
+        <label style="font-size: 200%;">Issue Database:</label>
+        <table class="fixed">
+            <col width="5%"/>
+            <col width="20%"/>
+            <col width="10%"/>
+            <col width="10%"/>
+            <tr style="font-size: 100%">
+                <th>ID</th>
+                <th>Decription</th>
+                <th>Status</th>
+                <th>Issuer</th>
+            </tr>
+GenerateDataHere!!
+        </table>
+    </div>
+    <div style="width: 39%; float: left">
+        <h2><u>Submit New Issues Here</u></h2>
+        <form action="/index.html" method="post">
+            <label for="issue">Issue Description:</label><br>
+            <textarea name="issue" cols="30" rows="5" value="">Type some issue here.</textarea><br>            
+            <label for="assignee">Issuer:</label><br>
+            <input type="text" id="assignee" name="assignee" value="Your name here"><br><br>
+            <input type="hidden" id="metadata" name="metadata" value="new">
+            <button type="submit" value="Submit" style="width: 100px; height: 40px; font-size: 80%;">Submit</button>
+        </form> 
+    </div>
+</div>
+</body>
+</html>
