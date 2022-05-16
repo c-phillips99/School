@@ -5,7 +5,7 @@ import numpy as np
 import torch.optim as opt
 import utils
 import hyp
-from dqn import MolDQN
+from ppo_lstm import PPO_LSTM
 from rdkit import Chem
 from rdkit.Chem import QED
 from environment import Molecule
@@ -48,10 +48,10 @@ class QEDRewardMolecule(Molecule):
 class Agent(object):
     def __init__(self, input_length, output_length, device):
         self.device = device
-        self.dqn = MolDQN(input_length, output_length).to(self.device)
+        self.ppo_lstm = PPO_LSTM(input_length, output_length).to(self.device)
         self.data = []
         self.optimizer = getattr(opt, hyp.optimizer)(
-            self.dqn.parameters(), lr=hyp.learning_rate
+            self.ppo_lstm.parameters(), lr=hyp.learning_rate
         )
 
     def put_data(self, transition):
@@ -81,16 +81,16 @@ class Agent(object):
                 .reshape(-1, hyp.fingerprint_length + 1)
                 .to(self.device)
             )
-            pi_out, _ = self.dqn.pi(state, first_hidden)
+            pi_out, _ = self.ppo_lstm.pi(state, first_hidden)
             pi_s[i] = torch.max(pi_out.squeeze(1))
-            v_s[i] = torch.max(self.dqn.v(state, first_hidden).squeeze(1))
+            v_s[i] = torch.max(self.ppo_lstm.v(state, first_hidden).squeeze(1))
 
             next_state = (
                 torch.FloatTensor(s_prime[i])
                 .reshape(-1, hyp.fingerprint_length + 1)
                 .to(self.device)
             )
-            v_s_prime[i] = torch.max(self.dqn.v(next_state, second_hidden).squeeze(1))
+            v_s_prime[i] = torch.max(self.ppo_lstm.v(next_state, second_hidden).squeeze(1))
         
         return pi_s, v_s, v_s_prime
     
