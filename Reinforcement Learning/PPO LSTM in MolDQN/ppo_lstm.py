@@ -2,8 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-
-class MolDQN(nn.Module):
+class PPO_LSTM(nn.Module):
     def __init__(self, input_length, output_length):
         super(MolDQN, self).__init__()     
         self.fc1   = nn.Linear(input_length,64)
