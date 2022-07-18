@@ -13,7 +13,7 @@ def setup_db():
 
     if result == None:
         print("Creating database")
-        with open('C:/Users/celld/School/Databases/Project/setup_db.sql') as sql_file:
+        with open('../setup_db.sql') as sql_file:
             full_sql = sql_file.read()
             sql_commands = full_sql.split(';') 
             for sql_command in sql_commands:
